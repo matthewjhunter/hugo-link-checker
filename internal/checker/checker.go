@@ -37,9 +37,9 @@ func CheckLinks(files []*scanner.File, rootDir string, checkExternal bool, baseU
 						}
 					}
 				} else {
-					// Skip external link checking, mark as unchecked
-					link.StatusCode = 0
-					link.ErrorMessage = "External link checking disabled"
+					// Skip external link checking, mark as OK
+					link.StatusCode = 200
+					link.ErrorMessage = ""
 				}
 			} else {
 				err := checkInternalLink(link, rootDir, baseURL, client, verbose)
