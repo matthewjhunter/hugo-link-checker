@@ -202,6 +202,15 @@ func checkHugoFile(linkPath string, rootDir string) bool {
 		
 		// Try content/example/_index.md (for list pages)
 		candidatePaths = append(candidatePaths, filepath.Join(rootDir, "content", basePath, "_index.md"))
+		
+		// Try direct path as .md file (for when root is already in content)
+		candidatePaths = append(candidatePaths, filepath.Join(rootDir, basePath+".md"))
+		
+		// Try direct path with index.md (for when root is already in content)
+		candidatePaths = append(candidatePaths, filepath.Join(rootDir, basePath, "index.md"))
+		
+		// Try direct path with _index.md (for when root is already in content)
+		candidatePaths = append(candidatePaths, filepath.Join(rootDir, basePath, "_index.md"))
 	}
 	
 	// 5. If no trailing slash, also try the Hugo transformations
@@ -214,6 +223,15 @@ func checkHugoFile(linkPath string, rootDir string) bool {
 		
 		// Try content/example/_index.md
 		candidatePaths = append(candidatePaths, filepath.Join(rootDir, "content", linkPath, "_index.md"))
+		
+		// Try direct path as .md file (for when root is already in content)
+		candidatePaths = append(candidatePaths, filepath.Join(rootDir, linkPath+".md"))
+		
+		// Try direct path with index.md (for when root is already in content)
+		candidatePaths = append(candidatePaths, filepath.Join(rootDir, linkPath, "index.md"))
+		
+		// Try direct path with _index.md (for when root is already in content)
+		candidatePaths = append(candidatePaths, filepath.Join(rootDir, linkPath, "_index.md"))
 	}
 	
 	// Check each candidate path
