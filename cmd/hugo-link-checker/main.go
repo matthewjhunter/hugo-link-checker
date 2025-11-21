@@ -106,7 +106,7 @@ func main() {
         OutputFile: outputFile,
     }
     
-    err := reporter.GenerateReport(fileList, reportOptions)
+    err = reporter.GenerateReport(fileList, reportOptions)
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error generating report: %v\n", err)
         os.Exit(1)
