@@ -21,6 +21,7 @@ func main() {
         checkImages   bool
         checkExternal bool
         baseURL       string
+        verbose       bool
     )
     
     flag.BoolVar(&showVersion, "version", false, "Print version and exit")
@@ -31,6 +32,7 @@ func main() {
     flag.BoolVar(&checkImages, "check-images", false, "Check image links (img src, markdown images)")
     flag.BoolVar(&checkExternal, "check-external", false, "Check external links (default: only check internal links)")
     flag.StringVar(&baseURL, "base-url", "", "Base URL prefix to use when checking internal links online (e.g., https://example.com)")
+    flag.BoolVar(&verbose, "verbose", false, "Verbose output: show all candidate paths checked for broken internal links")
     flag.Parse()
 
     if showVersion {
@@ -84,7 +86,7 @@ func main() {
     }
     
     // Check all links
-    err := checker.CheckLinks(fileList, rootDir, checkExternal, baseURL)
+    err := checker.CheckLinks(fileList, rootDir, checkExternal, baseURL, verbose)
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error checking links: %v\n", err)
         os.Exit(1)

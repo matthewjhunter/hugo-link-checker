@@ -14,7 +14,7 @@ import (
 )
 
 // CheckLinks validates all links in the provided files
-func CheckLinks(files []*scanner.File, rootDir string, checkExternal bool, baseURL string) error {
+func CheckLinks(files []*scanner.File, rootDir string, checkExternal bool, baseURL string, verbose bool) error {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -42,7 +42,7 @@ func CheckLinks(files []*scanner.File, rootDir string, checkExternal bool, baseU
 					link.ErrorMessage = "External link checking disabled"
 				}
 			} else {
-				err := checkInternalLink(link, rootDir, baseURL, client)
+				err := checkInternalLink(link, rootDir, baseURL, client, verbose)
 				if err != nil {
 					return fmt.Errorf("error checking internal link %s: %v", link.URL, err)
 				}
@@ -122,7 +122,7 @@ func checkExternalLink(client *http.Client, link *scanner.Link) error {
 	return nil
 }
 
-func checkInternalLink(link *scanner.Link, rootDir string, baseURL string, client *http.Client) error {
+func checkInternalLink(link *scanner.Link, rootDir string, baseURL string, client *http.Client, verbose bool) error {
 	// Clean and resolve the path
 	linkPath := link.URL
 	
@@ -160,13 +160,17 @@ func checkInternalLink(link *scanner.Link, rootDir string, baseURL string, clien
 		link.ErrorMessage = tempLink.ErrorMessage
 	} else {
 		// Check if file exists locally using Hugo conventions
-		found := checkHugoFile(linkPath, rootDir)
+		found, checkedPaths := checkHugoFileVerbose(linkPath, rootDir, verbose)
 		if found {
 			link.StatusCode = 200
 			link.ErrorMessage = ""
 		} else {
 			link.StatusCode = 404
-			link.ErrorMessage = "File not found"
+			if verbose && len(checkedPaths) > 0 {
+				link.ErrorMessage = fmt.Sprintf("File not found. Checked paths: %s", strings.Join(checkedPaths, ", "))
+			} else {
+				link.ErrorMessage = "File not found"
+			}
 		}
 	}
 	
@@ -175,6 +179,12 @@ func checkInternalLink(link *scanner.Link, rootDir string, baseURL string, clien
 
 // checkHugoFile checks if a file exists using Hugo's conventions
 func checkHugoFile(linkPath string, rootDir string) bool {
+	found, _ := checkHugoFileVerbose(linkPath, rootDir, false)
+	return found
+}
+
+// checkHugoFileVerbose checks if a file exists using Hugo's conventions and optionally returns checked paths
+func checkHugoFileVerbose(linkPath string, rootDir string, verbose bool) (bool, []string) {
 	// Clean the path
 	linkPath = strings.TrimPrefix(linkPath, "/")
 	
@@ -235,13 +245,17 @@ func checkHugoFile(linkPath string, rootDir string) bool {
 	}
 	
 	// Check each candidate path
+	var checkedPaths []string
 	for _, path := range candidatePaths {
+		if verbose {
+			checkedPaths = append(checkedPaths, path)
+		}
 		if _, err := os.Stat(path); err == nil {
-			return true
+			return true, checkedPaths
 		}
 	}
 	
-	return false
+	return false, checkedPaths
 }
 
 // CountBrokenLinks returns the number of broken links across all files
