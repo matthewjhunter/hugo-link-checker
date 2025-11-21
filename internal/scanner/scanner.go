@@ -65,17 +65,17 @@ func NewLink(linkURL string) Link {
 	}
 }
 
-// ParseLinksFromFile reads a markdown file and extracts all links using regex
+// ParseLinksFromFile reads a file and extracts all links using regex
 func ParseLinksFromFile(file *File) error {
-	// Regular expressions for different markdown link formats
-	// [text](url) - standard markdown links
-	// [text](url "title") - links with titles
-	// <url> - autolinks
-	// [text][ref] and [ref]: url - reference links (we'll capture the URL part)
+	// Regular expressions for different link formats
+	// Markdown: [text](url), <url>, [ref]: url
+	// HTML: <a href="url">, <link href="url">
 	linkRegexes := []*regexp.Regexp{
-		regexp.MustCompile(`\[([^\]]*)\]\(([^)]+)\)`),           // [text](url)
-		regexp.MustCompile(`<(https?://[^>]+)>`),                // <http://example.com>
-		regexp.MustCompile(`^\s*\[([^\]]+)\]:\s*(.+)$`),         // [ref]: url (reference definitions)
+		regexp.MustCompile(`\[([^\]]*)\]\(([^)]+)\)`),           // [text](url) - markdown
+		regexp.MustCompile(`<(https?://[^>]+)>`),                // <http://example.com> - markdown autolinks
+		regexp.MustCompile(`^\s*\[([^\]]+)\]:\s*(.+)$`),         // [ref]: url - markdown reference definitions
+		regexp.MustCompile(`<a\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*>`), // <a href="url"> - HTML
+		regexp.MustCompile(`<link\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*>`), // <link href="url"> - HTML
 	}
 	
 	// Open the file

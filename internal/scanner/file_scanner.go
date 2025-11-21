@@ -7,14 +7,19 @@ import (
 	"strings"
 )
 
-// EnumerateFiles recursively finds all files with the specified extension
+// EnumerateFiles recursively finds all files with the specified extensions
 // and returns a map of canonical paths to File structs to ensure uniqueness
-func EnumerateFiles(rootDir string, extension string) (map[string]*File, error) {
+func EnumerateFiles(rootDir string, extensions []string) (map[string]*File, error) {
 	files := make(map[string]*File)
 	
-	// Normalize the extension to include the dot
-	if !strings.HasPrefix(extension, ".") {
-		extension = "." + extension
+	// Normalize the extensions to include the dot
+	normalizedExts := make([]string, len(extensions))
+	for i, ext := range extensions {
+		if !strings.HasPrefix(ext, ".") {
+			normalizedExts[i] = "." + ext
+		} else {
+			normalizedExts[i] = ext
+		}
 	}
 	
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
@@ -27,8 +32,15 @@ func EnumerateFiles(rootDir string, extension string) (map[string]*File, error) 
 			return nil
 		}
 		
-		// Check if file has the desired extension
-		if !strings.HasSuffix(strings.ToLower(path), strings.ToLower(extension)) {
+		// Check if file has one of the desired extensions
+		hasValidExtension := false
+		for _, ext := range normalizedExts {
+			if strings.HasSuffix(strings.ToLower(path), strings.ToLower(ext)) {
+				hasValidExtension = true
+				break
+			}
+		}
+		if !hasValidExtension {
 			return nil
 		}
 		

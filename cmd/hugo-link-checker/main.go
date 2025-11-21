@@ -20,13 +20,13 @@ func main() {
     }
 
     // Example usage of the file scanner
-    files, err := scanner.EnumerateFiles(".", ".md")
+    files, err := scanner.EnumerateFiles(".", []string{".md", ".html", ".htm"})
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error scanning files: %v\n", err)
         os.Exit(1)
     }
     
-    fmt.Printf("Found %d unique markdown files\n", len(files))
+    fmt.Printf("Found %d unique files\n", len(files))
     
     // Parse links from each file
     for _, file := range scanner.GetFileList(files) {
