@@ -149,7 +149,7 @@ func TestParseLinksFromHTMLFile(t *testing.T) {
 		"https://www.example.com":     LinkTypeExternal,
 		"./internal.html":             LinkTypeInternal,
 		"../docs/index.html":          LinkTypeInternal,
-		"mailto:test@example.com":     LinkTypeInternal, // mailto is treated as internal
+		"mailto:test@example.com":     LinkTypeExternal, // mailto has a scheme, so it's external
 		"https://github.com/user/repo": LinkTypeExternal,
 	}
 
@@ -271,7 +271,7 @@ func TestLinkTypeDetection(t *testing.T) {
 		{"../parent.html", LinkTypeInternal},
 		{"/absolute.html", LinkTypeInternal},
 		{"page.html", LinkTypeInternal},
-		{"mailto:test@example.com", LinkTypeInternal},
+		{"mailto:test@example.com", LinkTypeExternal},
 		{"#fragment", LinkTypeInternal},
 		{"", LinkTypeInternal}, // Empty URL treated as internal
 	}
