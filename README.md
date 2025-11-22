@@ -54,7 +54,7 @@ ls dist
 | Flag | Description | Default |
 |------|-------------|---------|
 | `-version` | Print version and exit | `false` |
-| `-root <dir>` | Root directory to scan | `.` |
+| `-root <dir>` | Hugo root directory to scan | `.` |
 | `-check-external` | Check external HTTP/HTTPS links | `false` |
 | `-check-images` | Check image links (img src, markdown images) | `false` |
 | `-base-url <url>` | Base URL for checking internal links online (e.g., `https://example.com`) | `""` |
