@@ -14,7 +14,7 @@ import (
 )
 
 // CheckLinks validates all links in the provided files
-func CheckLinks(files []*scanner.File, rootDir string, checkExternal bool, baseURL string, verbose bool) error {
+func CheckLinks(files []*scanner.File, rootDir string, checkExternal bool, checkPublic bool, baseURL string, verbose bool) error {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -50,7 +50,7 @@ func CheckLinks(files []*scanner.File, rootDir string, checkExternal bool, baseU
 					link.ErrorMessage = ""
 				}
 			} else {
-				err := checkInternalLink(link, rootDir, baseURL, client, verbose)
+				err := checkInternalLink(link, rootDir, checkPublic, baseURL, client, verbose)
 				if err != nil {
 					return fmt.Errorf("error checking internal link %s: %v", link.URL, err)
 				}
@@ -130,7 +130,7 @@ func checkExternalLink(client *http.Client, link *scanner.Link) error {
 	return nil
 }
 
-func checkInternalLink(link *scanner.Link, rootDir string, baseURL string, client *http.Client, verbose bool) error {
+func checkInternalLink(link *scanner.Link, rootDir string, checkPublic bool, baseURL string, client *http.Client, verbose bool) error {
 	// Clean and resolve the path
 	linkPath := link.URL
 	
@@ -168,7 +168,17 @@ func checkInternalLink(link *scanner.Link, rootDir string, baseURL string, clien
 		link.ErrorMessage = tempLink.ErrorMessage
 	} else {
 		// Check if file exists locally using Hugo conventions
-		found, checkedPaths := checkHugoFileVerbose(linkPath, rootDir, verbose)
+		var found bool
+		var checkedPaths []string
+		
+		if checkPublic {
+			// Check in Hugo's public directory for built site files
+			found, checkedPaths = checkPublicFileVerbose(linkPath, rootDir, verbose)
+		} else {
+			// Check using standard Hugo source conventions
+			found, checkedPaths = checkHugoFileVerbose(linkPath, rootDir, verbose)
+		}
+		
 		if found {
 			link.StatusCode = 200
 			link.ErrorMessage = ""
@@ -280,6 +290,68 @@ func checkHugoFileVerbose(linkPath string, rootDir string, verbose bool) (bool, 
 		// Try direct path with _index.md (for when root is already in content)
 		candidatePaths = append(candidatePaths, filepath.Join(rootDir, linkPath, "_index.md"))
 		candidatePaths = append(candidatePaths, filepath.Join(hugoSiteRoot, linkPath, "_index.md"))
+	}
+	
+	// Deduplicate candidate paths
+	seen := make(map[string]bool)
+	var uniquePaths []string
+	for _, path := range candidatePaths {
+		if !seen[path] {
+			seen[path] = true
+			uniquePaths = append(uniquePaths, path)
+		}
+	}
+	
+	// Check each candidate path
+	var checkedPaths []string
+	for _, path := range uniquePaths {
+		if verbose {
+			checkedPaths = append(checkedPaths, path)
+		}
+		if _, err := os.Stat(path); err == nil {
+			return true, checkedPaths
+		}
+	}
+	
+	return false, checkedPaths
+}
+
+// checkPublicFileVerbose checks if a file exists in Hugo's public directory and optionally returns checked paths
+func checkPublicFileVerbose(linkPath string, rootDir string, verbose bool) (bool, []string) {
+	// Clean the path
+	linkPath = strings.TrimPrefix(linkPath, "/")
+	
+	// Detect Hugo site root
+	hugoSiteRoot := rootDir
+	if strings.Contains(rootDir, "/content/") {
+		// Find the Hugo site root by going up to the directory containing "content"
+		parts := strings.Split(rootDir, "/content/")
+		if len(parts) > 0 {
+			hugoSiteRoot = parts[0]
+		}
+	}
+	
+	// List of possible file locations to check in public directory
+	var candidatePaths []string
+	
+	// 1. Direct path in public directory
+	candidatePaths = append(candidatePaths, filepath.Join(hugoSiteRoot, "public", linkPath))
+	
+	// 2. If linkPath ends with /, try index.html
+	if strings.HasSuffix(linkPath, "/") {
+		candidatePaths = append(candidatePaths, filepath.Join(hugoSiteRoot, "public", linkPath, "index.html"))
+	}
+	
+	// 3. If linkPath doesn't have extension, try adding index.html
+	if !strings.Contains(filepath.Base(linkPath), ".") {
+		candidatePaths = append(candidatePaths, filepath.Join(hugoSiteRoot, "public", linkPath, "index.html"))
+		// Also try with trailing slash and index.html
+		candidatePaths = append(candidatePaths, filepath.Join(hugoSiteRoot, "public", linkPath+"/index.html"))
+	}
+	
+	// 4. Try common Hugo output formats
+	if !strings.Contains(filepath.Base(linkPath), ".") {
+		candidatePaths = append(candidatePaths, filepath.Join(hugoSiteRoot, "public", linkPath+".html"))
 	}
 	
 	// Deduplicate candidate paths

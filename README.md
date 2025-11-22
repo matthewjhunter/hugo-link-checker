@@ -57,6 +57,7 @@ ls dist
 | `-root <dir>` | Hugo root directory to scan | `.` |
 | `-check-external` | Check external HTTP/HTTPS links | `false` |
 | `-check-images` | Check image links (img src, markdown images) | `false` |
+| `-check-public` | Check for link destinations in Hugo's public directory | `false` |
 | `-base-url <url>` | Base URL for checking internal links online (e.g., `https://example.com`) | `""` |
 | `-format <format>` | Report format: `text`, `json`, `html` | `text` |
 | `-output <file>` | Output file for report (default: stdout) | `""` |
@@ -77,6 +78,9 @@ ls dist
 
 # Check internal links against live site
 ./hugo-link-checker -base-url https://mysite.com -check-external
+
+# Check links against Hugo's built public directory
+./hugo-link-checker -check-public
 
 # Verbose mode for debugging broken internal links
 ./hugo-link-checker -verbose
