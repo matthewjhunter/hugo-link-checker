@@ -34,13 +34,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          os=${{ matrix.os }}
-          arch=${{ matrix.arch }}
+          os="${{ matrix.os }}"
+          arch="${{ matrix.arch }}"
           ext=""
-          if [ "$${os}" = "windows" ]; then ext=".exe"; fi
+          if [ "${os}" = "windows" ]; then ext=".exe"; fi
           mkdir -p dist
-          echo "Building for $${os}/$${arch}"
-          CGO_ENABLED=0 GOOS=$${os} GOARCH=$${arch} go build -ldflags "-s -w" -o dist/hugo-link-checker-$${os}-$${arch}$${ext} ./cmd/hugo-link-checker
+          echo "Building for ${os}/${arch}"
+          CGO_ENABLED=0 GOOS=${os} GOARCH=${arch} go build -ldflags "-s -w" -o dist/hugo-link-checker-${os}-${arch}${ext} ./cmd/hugo-link-checker
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
