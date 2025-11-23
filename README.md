@@ -98,9 +98,11 @@ ls dist
 ## Output formats
 
 ### Text (default)
+
 Human-readable summary with broken links listed by file.
 
 ### JSON
+
 Machine-readable format with detailed link information:
 ```json
 {
@@ -115,7 +117,8 @@ Machine-readable format with detailed link information:
 ```
 
 ### HTML
-Web-friendly report with styling and interactive features.
+
+Web-friendly report.
 
 ## Development
 
