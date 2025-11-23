@@ -108,7 +108,7 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 		
 		fmt.Fprintf(writer, "File: %s\n", file.Path)
 		fmt.Fprintf(writer, "  Canonical: %s\n", file.CanonicalPath)
-		fmt.Fprintf(writer, "  Links: %d/%d\n", len(brokenLinks), len(file.Links))
+		fmt.Fprintf(writer, "  Links (broken/total): %d/%d\n", len(brokenLinks), len(file.Links))
 		
 		// Only show broken links
 		for _, link := range brokenLinks {
