@@ -41,6 +41,12 @@ jobs:
           mkdir -p dist
           echo "Building for ${os}/${arch}"
           CGO_ENABLED=0 GOOS=${os} GOARCH=${arch} go build -ldflags "-s -w" -o dist/hugo-link-checker-${os}-${arch}${ext} ./cmd/hugo-link-checker
+          
+          # Compress binaries for Linux and macOS
+          if [ "${os}" != "windows" ]; then
+            echo "Compressing binary for ${os}/${arch}"
+            gzip dist/hugo-link-checker-${os}-${arch}${ext}
+          fi
 
       - name: Debug artifact info
         shell: bash
