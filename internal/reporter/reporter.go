@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/infodancer/hugo-link-checker/internal/scanner"
@@ -85,18 +87,34 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 	fmt.Fprintf(writer, "  Internal links: %d\n", summary.InternalLinks)
 	fmt.Fprintf(writer, "  External links: %d\n\n", summary.ExternalLinks)
 	
+	// Filter files to only show markdown/HTML files with broken links
 	for _, file := range files {
+		if !isMarkdownOrHTML(file.Path) {
+			continue
+		}
+		
+		// Check if this file has any broken links
+		var brokenLinks []scanner.Link
+		for _, link := range file.Links {
+			if link.StatusCode >= 400 || (link.StatusCode == 0 && link.ErrorMessage != "") {
+				brokenLinks = append(brokenLinks, link)
+			}
+		}
+		
+		// Only show files that have broken links
+		if len(brokenLinks) == 0 {
+			continue
+		}
+		
 		fmt.Fprintf(writer, "File: %s\n", file.Path)
 		fmt.Fprintf(writer, "  Canonical: %s\n", file.CanonicalPath)
-		fmt.Fprintf(writer, "  Links found: %d\n", len(file.Links))
+		fmt.Fprintf(writer, "  Broken links: %d\n", len(brokenLinks))
 		
-		for _, link := range file.Links {
-			status := "OK"
-			if link.StatusCode >= 400 || (link.StatusCode == 0 && link.ErrorMessage != "") {
-				status = "BROKEN"
-				if link.ErrorMessage != "" {
-					status = fmt.Sprintf("BROKEN (%s)", link.ErrorMessage)
-				}
+		// Only show broken links
+		for _, link := range brokenLinks {
+			status := "BROKEN"
+			if link.ErrorMessage != "" {
+				status = fmt.Sprintf("BROKEN (%s)", link.ErrorMessage)
 			}
 			
 			linkType := "internal"
@@ -227,6 +245,12 @@ func calculateSummary(files []*scanner.File) ReportSummary {
 	
 	summary.UniqueLinks = len(uniqueURLs)
 	return summary
+}
+
+// isMarkdownOrHTML checks if a file is a markdown or HTML file based on its extension
+func isMarkdownOrHTML(filePath string) bool {
+	ext := strings.ToLower(filepath.Ext(filePath))
+	return ext == ".md" || ext == ".markdown" || ext == ".html" || ext == ".htm"
 }
 
 func getUniqueLinks(files []*scanner.File) []UniqueLink {
