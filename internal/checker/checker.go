@@ -302,14 +302,26 @@ func checkHugoFileVerbose(linkPath string, rootDir string, verbose bool) (bool, 
 		}
 	}
 	
-	// Check each candidate path
+	// Check each candidate path (case-insensitive for source files)
 	var checkedPaths []string
 	for _, path := range uniquePaths {
 		if verbose {
 			checkedPaths = append(checkedPaths, path)
 		}
+		
+		// First try exact match
 		if _, err := os.Stat(path); err == nil {
 			return true, checkedPaths
+		}
+		
+		// If exact match fails and this looks like a source file path, try case-insensitive matching
+		if isSourceFilePath(path) {
+			if found := findCaseInsensitiveFile(path); found != "" {
+				if verbose {
+					checkedPaths = append(checkedPaths, found)
+				}
+				return true, checkedPaths
+			}
 		}
 	}
 	
@@ -376,6 +388,33 @@ func checkPublicFileVerbose(linkPath string, rootDir string, verbose bool) (bool
 	}
 	
 	return false, checkedPaths
+}
+
+// isSourceFilePath checks if a path looks like it's for a Hugo source file
+func isSourceFilePath(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	return ext == ".md" || ext == ".markdown" || strings.Contains(path, "/content/")
+}
+
+// findCaseInsensitiveFile attempts to find a file with case-insensitive matching
+func findCaseInsensitiveFile(targetPath string) string {
+	dir := filepath.Dir(targetPath)
+	targetBase := filepath.Base(targetPath)
+	
+	// Read the directory
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return ""
+	}
+	
+	// Look for case-insensitive match
+	for _, entry := range entries {
+		if strings.EqualFold(entry.Name(), targetBase) {
+			return filepath.Join(dir, entry.Name())
+		}
+	}
+	
+	return ""
 }
 
 // CountBrokenLinks returns the number of broken links across all files
