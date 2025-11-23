@@ -25,6 +25,7 @@ type Link struct {
 	LastChecked  time.Time `json:"last_checked"`
 	StatusCode   int       `json:"status_code"`
 	ErrorMessage string    `json:"error_message,omitempty"`
+	Ignored      bool      `json:"ignored,omitempty"`
 }
 
 // File represents a file and its links

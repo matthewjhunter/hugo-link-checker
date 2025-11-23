@@ -1,0 +1,20 @@
+# Hugo Link Checker Ignore File
+# Lines starting with # are comments
+# Each line should contain a regular expression pattern
+# Links matching any pattern will be ignored when broken
+
+# Ignore all example.com links
+^https?://example\.com
+
+# Ignore localhost links
+^https?://localhost
+
+# Ignore specific broken external services
+^https?://broken-service\.example\.org
+
+# Ignore links with specific patterns
+/temp/
+/draft/
+
+# Ignore mailto links to specific domains
+^mailto:.*@example\.com$
