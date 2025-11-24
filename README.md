@@ -120,6 +120,159 @@ Machine-readable format with detailed link information:
 
 Web-friendly report.
 
+## GitHub Action
+
+This tool is available as a reusable GitHub Action that can be used in other repositories to check links in Hugo sites and static websites.
+
+### Basic usage
+
+```yaml
+name: Check Links
+on: [push, pull_request]
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: your-username/hugo-link-checker@v1
+        with:
+          root: './content'
+          check-external: true
+```
+
+### Action inputs
+
+| Input | Description | Default |
+|-------|-------------|---------|
+| `root` | Root directory to scan | `.` |
+| `check-external` | Check external HTTP/HTTPS links | `false` |
+| `check-images` | Check image links | `false` |
+| `check-public` | Check for link destinations in Hugo public directory | `false` |
+| `base-url` | Base URL for checking internal links online | `""` |
+| `format` | Report format: `text`, `json`, `html` | `text` |
+| `output` | Output file for report | `""` |
+| `verbose` | Show verbose output for debugging | `false` |
+| `fail-on-broken-links` | Fail the action if broken links are found | `true` |
+
+### Action outputs
+
+| Output | Description |
+|--------|-------------|
+| `broken-links-count` | Number of broken links found |
+| `report-file` | Path to generated report file (if output specified) |
+
+### Advanced examples
+
+#### Full link checking with report generation
+
+```yaml
+name: Comprehensive Link Check
+on: [push, pull_request]
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check all links
+        uses: your-username/hugo-link-checker@v1
+        with:
+          root: '.'
+          check-external: true
+          check-images: true
+          format: 'json'
+          output: 'link-report.json'
+          verbose: true
+      
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: link-check-report
+          path: link-report.json
+```
+
+#### Check against live site
+
+```yaml
+name: Check Links Against Live Site
+on: [push, pull_request]
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check internal links against live site
+        uses: your-username/hugo-link-checker@v1
+        with:
+          root: './content'
+          base-url: 'https://mysite.com'
+          check-external: true
+```
+
+#### Non-failing link check for monitoring
+
+```yaml
+name: Link Check Monitoring
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check links (non-failing)
+        id: link-check
+        uses: your-username/hugo-link-checker@v1
+        with:
+          check-external: true
+          fail-on-broken-links: false
+          format: 'html'
+          output: 'link-report.html'
+      
+      - name: Comment on broken links
+        if: steps.link-check.outputs.broken-links-count > 0
+        run: |
+          echo "Found ${{ steps.link-check.outputs.broken-links-count }} broken links"
+          # Add notification logic here
+```
+
+#### Hugo site with public directory check
+
+```yaml
+name: Hugo Site Link Check
+on: [push, pull_request]
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: 'latest'
+      
+      - name: Build Hugo site
+        run: hugo --minify
+      
+      - name: Check links in built site
+        uses: your-username/hugo-link-checker@v1
+        with:
+          root: '.'
+          check-public: true
+          check-external: true
+          base-url: 'https://mysite.com'
+```
+
 ## Development
 
 This repository contains a Go-based CLI `hugo-link-checker` and CI workflow

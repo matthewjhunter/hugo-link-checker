@@ -1,0 +1,139 @@
+name: 'Hugo Link Checker'
+description: 'Check links in Hugo sites and static websites'
+author: 'hugo-link-checker'
+
+inputs:
+  root:
+    description: 'Root directory to scan'
+    required: false
+    default: '.'
+  check-external:
+    description: 'Check external HTTP/HTTPS links'
+    required: false
+    default: 'false'
+  check-images:
+    description: 'Check image links'
+    required: false
+    default: 'false'
+  check-public:
+    description: 'Check for link destinations in Hugo public directory'
+    required: false
+    default: 'false'
+  base-url:
+    description: 'Base URL for checking internal links online'
+    required: false
+    default: ''
+  format:
+    description: 'Report format (text, json, html)'
+    required: false
+    default: 'text'
+  output:
+    description: 'Output file for report'
+    required: false
+    default: ''
+  verbose:
+    description: 'Show verbose output for debugging'
+    required: false
+    default: 'false'
+  fail-on-broken-links:
+    description: 'Fail the action if broken links are found'
+    required: false
+    default: 'true'
+
+outputs:
+  broken-links-count:
+    description: 'Number of broken links found'
+    value: ${{ steps.check.outputs.broken-links-count }}
+  report-file:
+    description: 'Path to generated report file'
+    value: ${{ steps.check.outputs.report-file }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download hugo-link-checker
+      shell: bash
+      run: |
+        # Determine OS and architecture
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+        
+        case $ARCH in
+          x86_64) ARCH="amd64" ;;
+          aarch64|arm64) ARCH="arm64" ;;
+          armv7l) ARCH="arm" ;;
+        esac
+        
+        # Get latest release
+        LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ github.action_repository }}/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        
+        # Download binary
+        BINARY_NAME="hugo-link-checker-${OS}-${ARCH}"
+        if [ "$OS" = "windows" ]; then
+          BINARY_NAME="${BINARY_NAME}.exe"
+        fi
+        
+        DOWNLOAD_URL="https://github.com/${{ github.action_repository }}/releases/download/${LATEST_RELEASE}/${BINARY_NAME}"
+        
+        echo "Downloading hugo-link-checker from: $DOWNLOAD_URL"
+        curl -L -o hugo-link-checker "$DOWNLOAD_URL"
+        chmod +x hugo-link-checker
+        
+        # Verify download
+        ./hugo-link-checker -version
+
+    - name: Run hugo-link-checker
+      id: check
+      shell: bash
+      run: |
+        # Build command arguments
+        ARGS="-root ${{ inputs.root }}"
+        
+        if [ "${{ inputs.check-external }}" = "true" ]; then
+          ARGS="$ARGS -check-external"
+        fi
+        
+        if [ "${{ inputs.check-images }}" = "true" ]; then
+          ARGS="$ARGS -check-images"
+        fi
+        
+        if [ "${{ inputs.check-public }}" = "true" ]; then
+          ARGS="$ARGS -check-public"
+        fi
+        
+        if [ -n "${{ inputs.base-url }}" ]; then
+          ARGS="$ARGS -base-url ${{ inputs.base-url }}"
+        fi
+        
+        if [ -n "${{ inputs.output }}" ]; then
+          ARGS="$ARGS -output ${{ inputs.output }}"
+          echo "report-file=${{ inputs.output }}" >> $GITHUB_OUTPUT
+        fi
+        
+        ARGS="$ARGS -format ${{ inputs.format }}"
+        
+        if [ "${{ inputs.verbose }}" = "true" ]; then
+          ARGS="$ARGS -verbose"
+        fi
+        
+        # Run the checker and capture exit code
+        set +e
+        ./hugo-link-checker $ARGS
+        EXIT_CODE=$?
+        set -e
+        
+        echo "broken-links-count=$EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # Handle failure based on input
+        if [ "${{ inputs.fail-on-broken-links }}" = "true" ] && [ $EXIT_CODE -gt 0 ]; then
+          echo "❌ Found $EXIT_CODE broken links"
+          exit $EXIT_CODE
+        elif [ $EXIT_CODE -gt 0 ]; then
+          echo "⚠️ Found $EXIT_CODE broken links (not failing due to fail-on-broken-links=false)"
+        else
+          echo "✅ No broken links found"
+        fi
+
+branding:
+  icon: 'link'
+  color: 'blue'
