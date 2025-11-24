@@ -79,6 +79,10 @@ runs:
         curl -L -o hugo-link-checker "$DOWNLOAD_URL"
         chmod +x hugo-link-checker
         
+        # Debug: List downloaded files
+        echo "Downloaded files:"
+        ls -la
+
         # Verify download
         ./hugo-link-checker -version
 
