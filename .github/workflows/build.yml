@@ -62,3 +62,76 @@ jobs:
         with:
           name: hugo-link-checker-${{ matrix.os-arch.os }}-${{ matrix.os-arch.arch }}
           path: dist/hugo-link-checker-${{ matrix.os-arch.os }}-${{ matrix.os-arch.arch }}*
+
+  build-deb:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        go-version: [ '1.21' ]
+        arch: [ 'amd64', 'arm64' ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential debhelper dh-golang
+
+      - name: Build binary for packaging
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=${{ matrix.arch }} go build -ldflags "-s -w" -o dist/hugo-link-checker ./cmd/hugo-link-checker
+
+      - name: Create Debian package
+        run: |
+          # Set version from git tag or use default
+          VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "0.1.0")
+          VERSION=${VERSION#v}  # Remove 'v' prefix if present
+          
+          # Create package directory structure
+          PKG_DIR="hugo-link-checker_${VERSION}_${{ matrix.arch }}"
+          mkdir -p "${PKG_DIR}/DEBIAN"
+          mkdir -p "${PKG_DIR}/usr/bin"
+          mkdir -p "${PKG_DIR}/usr/share/doc/hugo-link-checker"
+          
+          # Copy binary
+          cp dist/hugo-link-checker "${PKG_DIR}/usr/bin/"
+          chmod 755 "${PKG_DIR}/usr/bin/hugo-link-checker"
+          
+          # Copy documentation
+          cp README.md "${PKG_DIR}/usr/share/doc/hugo-link-checker/"
+          
+          # Create control file
+          cat > "${PKG_DIR}/DEBIAN/control" << EOF
+          Package: hugo-link-checker
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: ${{ matrix.arch }}
+          Maintainer: Hugo Link Checker Team <maintainer@example.com>
+          Description: Link checker for Hugo static sites
+           A command-line tool to check for broken links in Hugo static sites.
+           Supports checking both internal and external links, with various
+           output formats including text, JSON, and HTML reports.
+          Homepage: https://github.com/your-org/hugo-link-checker
+          EOF
+          
+          # Build the package
+          dpkg-deb --build "${PKG_DIR}"
+          
+          # Move to dist directory
+          mv "${PKG_DIR}.deb" dist/
+
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: hugo-link-checker-deb-${{ matrix.arch }}
+          path: dist/*.deb
