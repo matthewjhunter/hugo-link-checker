@@ -146,9 +146,15 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 			continue
 		}
 		
-		fmt.Fprintf(writer, "File: %s\n", file.Path)
-		fmt.Fprintf(writer, "  Canonical: %s\n", file.CanonicalPath)
-		fmt.Fprintf(writer, "  Links (broken/total): %d/%d\n", len(brokenLinks), len(file.Links))
+		if _, err := fmt.Fprintf(writer, "File: %s\n", file.Path); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Canonical: %s\n", file.CanonicalPath); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Links (broken/total): %d/%d\n", len(brokenLinks), len(file.Links)); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
 		
 		// Only show broken links
 		for _, link := range brokenLinks {
