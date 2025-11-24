@@ -20,6 +20,29 @@ A fast, comprehensive command-line tool to check links in Hugo-based websites an
 
 ## Installation
 
+### Download pre-built binaries
+
+Download the latest release for your platform from the [GitHub Releases page](https://github.com/your-org/hugo-link-checker/releases).
+
+### Debian/Ubuntu packages
+
+For Debian and Ubuntu systems, download the appropriate `.deb` package:
+
+```bash
+# For amd64 systems
+wget https://github.com/infodancer/hugo-link-checker/releases/latest/download/hugo-link-checker_VERSION_amd64.deb
+sudo dpkg -i hugo-link-checker_VERSION_amd64.deb
+
+# For arm64 systems  
+wget https://github.com/infodancer/hugo-link-checker/releases/latest/download/hugo-link-checker_VERSION_arm64.deb
+sudo dpkg -i hugo-link-checker_VERSION_arm64.deb
+```
+
+After installation, the tool will be available system-wide:
+```bash
+hugo-link-checker -version
+```
+
 ### Quick start (local build)
 
 ```bash
@@ -135,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: your-username/hugo-link-checker@v1
+      - uses: infodancer/hugo-link-checker@v1
         with:
           root: './content'
           check-external: true
@@ -164,6 +187,8 @@ jobs:
 
 ### Advanced examples
 
+Github Action workflows are experimental.
+
 #### Full link checking with report generation
 
 ```yaml
@@ -177,7 +202,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Check all links
-        uses: your-username/hugo-link-checker@v1
+        uses: infodancer/hugo-link-checker@v1
         with:
           root: '.'
           check-external: true
@@ -192,85 +217,6 @@ jobs:
         with:
           name: link-check-report
           path: link-report.json
-```
-
-#### Check against live site
-
-```yaml
-name: Check Links Against Live Site
-on: [push, pull_request]
-
-jobs:
-  link-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Check internal links against live site
-        uses: your-username/hugo-link-checker@v1
-        with:
-          root: './content'
-          base-url: 'https://mysite.com'
-          check-external: true
-```
-
-#### Non-failing link check for monitoring
-
-```yaml
-name: Link Check Monitoring
-on:
-  schedule:
-    - cron: '0 0 * * 0'  # Weekly
-
-jobs:
-  link-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Check links (non-failing)
-        id: link-check
-        uses: your-username/hugo-link-checker@v1
-        with:
-          check-external: true
-          fail-on-broken-links: false
-          format: 'html'
-          output: 'link-report.html'
-      
-      - name: Comment on broken links
-        if: steps.link-check.outputs.broken-links-count > 0
-        run: |
-          echo "Found ${{ steps.link-check.outputs.broken-links-count }} broken links"
-          # Add notification logic here
-```
-
-#### Hugo site with public directory check
-
-```yaml
-name: Hugo Site Link Check
-on: [push, pull_request]
-
-jobs:
-  build-and-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
-        with:
-          hugo-version: 'latest'
-      
-      - name: Build Hugo site
-        run: hugo --minify
-      
-      - name: Check links in built site
-        uses: your-username/hugo-link-checker@v1
-        with:
-          root: '.'
-          check-public: true
-          check-external: true
-          base-url: 'https://mysite.com'
 ```
 
 ## Development
