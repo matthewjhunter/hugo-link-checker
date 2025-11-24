@@ -232,7 +232,7 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 		return absPathI < absPathJ
 	})
 	
-	fmt.Fprintf(writer, `<!DOCTYPE html>
+	if _, err := fmt.Fprintf(writer, `<!DOCTYPE html>
 <html>
 <head>
     <title>Hugo Link Checker Report</title>
@@ -264,14 +264,18 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
         </ul>
     </div>
 `, time.Now().Format(time.RFC3339), summary.TotalFiles, summary.TotalLinks, 
-   summary.UniqueLinks, summary.BrokenLinks, summary.InternalLinks, summary.ExternalLinks)
+   summary.UniqueLinks, summary.BrokenLinks, summary.InternalLinks, summary.ExternalLinks); err != nil {
+		return fmt.Errorf("failed to write HTML header: %v", err)
+	}
 	
 	for _, file := range sortedFiles {
-		fmt.Fprintf(writer, `    <div class="file">
+		if _, err := fmt.Fprintf(writer, `    <div class="file">
         <h3>%s</h3>
         <p><strong>Canonical:</strong> %s</p>
         <p><strong>Links found:</strong> %d</p>
-`, file.Path, file.CanonicalPath, len(file.Links))
+`, file.Path, file.CanonicalPath, len(file.Links)); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
 		
 		for _, link := range file.Links {
 			status := "ok"
@@ -289,8 +293,10 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 				linkClass = "external"
 			}
 			
-			fmt.Fprintf(writer, `        <div class="link %s %s">%s [%s] - %s</div>
-`, status, linkClass, link.URL, linkClass, statusText)
+			if _, err := fmt.Fprintf(writer, `        <div class="link %s %s">%s [%s] - %s</div>
+`, status, linkClass, link.URL, linkClass, statusText); err != nil {
+				return fmt.Errorf("failed to write link info: %v", err)
+			}
 		}
 		
 		fmt.Fprintf(writer, "    </div>\n")
