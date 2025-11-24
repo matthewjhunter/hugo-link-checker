@@ -59,7 +59,11 @@ func GenerateReport(files []*scanner.File, options ReportOptions) error {
 		if err != nil {
 			return fmt.Errorf("failed to create output file: %v", err)
 		}
-		defer file.Close()
+		defer func() {
+			if closeErr := file.Close(); closeErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to close output file: %v\n", closeErr)
+			}
+		}()
 		writer = file
 	}
 	
@@ -88,19 +92,39 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 	// Check if we're writing to stdout
 	isStdout := writer == os.Stdout
 	
-	fmt.Fprintf(writer, "Hugo Link Checker Report\n")
-	fmt.Fprintf(writer, "========================\n")
-	fmt.Fprintf(writer, "Generated: %s\n\n", time.Now().Format(time.RFC3339))
+	if _, err := fmt.Fprintf(writer, "Hugo Link Checker Report\n"); err != nil {
+		return fmt.Errorf("failed to write report header: %v", err)
+	}
+	if _, err := fmt.Fprintf(writer, "========================\n"); err != nil {
+		return fmt.Errorf("failed to write report header: %v", err)
+	}
+	if _, err := fmt.Fprintf(writer, "Generated: %s\n\n", time.Now().Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("failed to write report header: %v", err)
+	}
 	
 	// Show summary at the beginning only if not writing to stdout
 	if !isStdout {
-		fmt.Fprintf(writer, "Summary:\n")
-		fmt.Fprintf(writer, "  Files scanned: %d\n", summary.TotalFiles)
-		fmt.Fprintf(writer, "  Total links: %d\n", summary.TotalLinks)
-		fmt.Fprintf(writer, "  Unique links: %d\n", summary.UniqueLinks)
-		fmt.Fprintf(writer, "  Broken links: %d\n", summary.BrokenLinks)
-		fmt.Fprintf(writer, "  Internal links: %d\n", summary.InternalLinks)
-		fmt.Fprintf(writer, "  External links: %d\n\n", summary.ExternalLinks)
+		if _, err := fmt.Fprintf(writer, "Summary:\n"); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Files scanned: %d\n", summary.TotalFiles); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Total links: %d\n", summary.TotalLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Unique links: %d\n", summary.UniqueLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Broken links: %d\n", summary.BrokenLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Internal links: %d\n", summary.InternalLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  External links: %d\n\n", summary.ExternalLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
 	}
 	
 	// Filter files to only show markdown/HTML files with broken links
@@ -122,9 +146,15 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 			continue
 		}
 		
-		fmt.Fprintf(writer, "File: %s\n", file.Path)
-		fmt.Fprintf(writer, "  Canonical: %s\n", file.CanonicalPath)
-		fmt.Fprintf(writer, "  Links (broken/total): %d/%d\n", len(brokenLinks), len(file.Links))
+		if _, err := fmt.Fprintf(writer, "File: %s\n", file.Path); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Canonical: %s\n", file.CanonicalPath); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Links (broken/total): %d/%d\n", len(brokenLinks), len(file.Links)); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
 		
 		// Only show broken links
 		for _, link := range brokenLinks {
@@ -138,20 +168,38 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 				linkType = "external"
 			}
 			
-			fmt.Fprintf(writer, "    %s [%s] - %s\n", link.URL, linkType, status)
+			if _, err := fmt.Fprintf(writer, "    %s [%s] - %s\n", link.URL, linkType, status); err != nil {
+				return fmt.Errorf("failed to write link info: %v", err)
+			}
 		}
-		fmt.Fprintf(writer, "\n")
+		if _, err := fmt.Fprintf(writer, "\n"); err != nil {
+			return fmt.Errorf("failed to write newline: %v", err)
+		}
 	}
 	
 	// Show summary at the end if writing to stdout
 	if isStdout {
-		fmt.Fprintf(writer, "Summary:\n")
-		fmt.Fprintf(writer, "  Files scanned: %d\n", summary.TotalFiles)
-		fmt.Fprintf(writer, "  Total links: %d\n", summary.TotalLinks)
-		fmt.Fprintf(writer, "  Unique links: %d\n", summary.UniqueLinks)
-		fmt.Fprintf(writer, "  Broken links: %d\n", summary.BrokenLinks)
-		fmt.Fprintf(writer, "  Internal links: %d\n", summary.InternalLinks)
-		fmt.Fprintf(writer, "  External links: %d\n", summary.ExternalLinks)
+		if _, err := fmt.Fprintf(writer, "Summary:\n"); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Files scanned: %d\n", summary.TotalFiles); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Total links: %d\n", summary.TotalLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Unique links: %d\n", summary.UniqueLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Broken links: %d\n", summary.BrokenLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  Internal links: %d\n", summary.InternalLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
+		if _, err := fmt.Fprintf(writer, "  External links: %d\n", summary.ExternalLinks); err != nil {
+			return fmt.Errorf("failed to write summary: %v", err)
+		}
 	}
 	
 	return nil
@@ -184,7 +232,7 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 		return absPathI < absPathJ
 	})
 	
-	fmt.Fprintf(writer, `<!DOCTYPE html>
+	if _, err := fmt.Fprintf(writer, `<!DOCTYPE html>
 <html>
 <head>
     <title>Hugo Link Checker Report</title>
@@ -216,14 +264,18 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
         </ul>
     </div>
 `, time.Now().Format(time.RFC3339), summary.TotalFiles, summary.TotalLinks, 
-   summary.UniqueLinks, summary.BrokenLinks, summary.InternalLinks, summary.ExternalLinks)
+   summary.UniqueLinks, summary.BrokenLinks, summary.InternalLinks, summary.ExternalLinks); err != nil {
+		return fmt.Errorf("failed to write HTML header: %v", err)
+	}
 	
 	for _, file := range sortedFiles {
-		fmt.Fprintf(writer, `    <div class="file">
+		if _, err := fmt.Fprintf(writer, `    <div class="file">
         <h3>%s</h3>
         <p><strong>Canonical:</strong> %s</p>
         <p><strong>Links found:</strong> %d</p>
-`, file.Path, file.CanonicalPath, len(file.Links))
+`, file.Path, file.CanonicalPath, len(file.Links)); err != nil {
+			return fmt.Errorf("failed to write file info: %v", err)
+		}
 		
 		for _, link := range file.Links {
 			status := "ok"
@@ -241,15 +293,21 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 				linkClass = "external"
 			}
 			
-			fmt.Fprintf(writer, `        <div class="link %s %s">%s [%s] - %s</div>
-`, status, linkClass, link.URL, linkClass, statusText)
+			if _, err := fmt.Fprintf(writer, `        <div class="link %s %s">%s [%s] - %s</div>
+`, status, linkClass, link.URL, linkClass, statusText); err != nil {
+				return fmt.Errorf("failed to write link info: %v", err)
+			}
 		}
 		
-		fmt.Fprintf(writer, "    </div>\n")
+		if _, err := fmt.Fprintf(writer, "    </div>\n"); err != nil {
+			return fmt.Errorf("failed to write HTML: %v", err)
+		}
 	}
 	
-	fmt.Fprintf(writer, `</body>
-</html>`)
+	if _, err := fmt.Fprintf(writer, `</body>
+</html>`); err != nil {
+		return fmt.Errorf("failed to write HTML footer: %v", err)
+	}
 	
 	return nil
 }

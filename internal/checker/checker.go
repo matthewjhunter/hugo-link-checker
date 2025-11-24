@@ -126,7 +126,12 @@ func checkExternalLink(client *http.Client, link *scanner.Link) error {
 			return nil
 		}
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			// Log the error but don't override the main function's return value
+			fmt.Fprintf(os.Stderr, "Warning: failed to close response body: %v\n", closeErr)
+		}
+	}()
 	
 	link.StatusCode = resp.StatusCode
 	if resp.StatusCode >= 400 {

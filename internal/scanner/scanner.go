@@ -97,7 +97,11 @@ func ParseLinksFromFile(file *File, checkImages bool) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %w", file.Path, err)
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close file %s: %v\n", file.Path, closeErr)
+		}
+	}()
 	
 	// Track unique links to avoid duplicates
 	linkMap := make(map[string]bool)

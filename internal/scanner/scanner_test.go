@@ -38,12 +38,18 @@ And an internal [relative link](./relative.md) too.
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		if err := os.Remove(tmpFile.Name()); err != nil {
+			t.Logf("Warning: failed to remove temp file: %v", err)
+		}
+	}()
 
 	if _, err := tmpFile.WriteString(testContent); err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	if err := tmpFile.Close(); err != nil {
+		t.Fatalf("Failed to close temp file: %v", err)
+	}
 
 	// Create File struct
 	file := &File{
@@ -53,7 +59,7 @@ And an internal [relative link](./relative.md) too.
 	}
 
 	// Parse links
-	err = ParseLinksFromFile(file)
+	err = ParseLinksFromFile(file, false)
 	if err != nil {
 		t.Fatalf("ParseLinksFromFile failed: %v", err)
 	}
@@ -122,12 +128,18 @@ func TestParseLinksFromHTMLFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() {
+		if err := os.Remove(tmpFile.Name()); err != nil {
+			t.Logf("Warning: failed to remove temp file: %v", err)
+		}
+	}()
 
 	if _, err := tmpFile.WriteString(testContent); err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
-	tmpFile.Close()
+	if err := tmpFile.Close(); err != nil {
+		t.Fatalf("Failed to close temp file: %v", err)
+	}
 
 	// Create File struct
 	file := &File{
@@ -137,7 +149,7 @@ func TestParseLinksFromHTMLFile(t *testing.T) {
 	}
 
 	// Parse links
-	err = ParseLinksFromFile(file)
+	err = ParseLinksFromFile(file, false)
 	if err != nil {
 		t.Fatalf("ParseLinksFromFile failed: %v", err)
 	}
@@ -182,7 +194,11 @@ func TestEnumerateFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create test files
 	testFiles := []string{
@@ -214,8 +230,12 @@ func TestEnumerateFiles(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create file %s: %v", fullPath, err)
 		}
-		file.WriteString("# Test content\n[link](http://example.com)")
-		file.Close()
+		if _, err := file.WriteString("# Test content\n[link](http://example.com)"); err != nil {
+			t.Fatalf("Failed to write to file %s: %v", fullPath, err)
+		}
+		if err := file.Close(); err != nil {
+			t.Fatalf("Failed to close file %s: %v", fullPath, err)
+		}
 	}
 
 	// Test enumeration

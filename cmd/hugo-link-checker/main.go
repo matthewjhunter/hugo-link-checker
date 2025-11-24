@@ -159,7 +159,11 @@ func loadIgnorePatterns() ([]*regexp.Regexp, error) {
         }
         return nil, err
     }
-    defer file.Close()
+    defer func() {
+        if closeErr := file.Close(); closeErr != nil {
+            fmt.Fprintf(os.Stderr, "Warning: failed to close ignore file: %v\n", closeErr)
+        }
+    }()
     
     var patterns []*regexp.Regexp
     scanner := bufio.NewScanner(file)

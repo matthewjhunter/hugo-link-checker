@@ -31,9 +31,13 @@ func TestCheckLinks_HugoTemplateSyntax(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
-	err = CheckLinks(files, tmpDir, false, "", false)
+	err = CheckLinks(files, tmpDir, false, false, "", false)
 	if err != nil {
 		t.Fatalf("CheckLinks failed: %v", err)
 	}
@@ -128,13 +132,21 @@ func TestCheckInternalLink_LocalFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create test files
 	contentDir := filepath.Join(tmpDir, "content")
 	staticDir := filepath.Join(tmpDir, "static")
-	os.MkdirAll(contentDir, 0755)
-	os.MkdirAll(staticDir, 0755)
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("Failed to create content directory: %v", err)
+	}
+	if err := os.MkdirAll(staticDir, 0755); err != nil {
+		t.Fatalf("Failed to create static directory: %v", err)
+	}
 
 	// Create some test files
 	testFiles := []string{
@@ -144,12 +156,16 @@ func TestCheckInternalLink_LocalFiles(t *testing.T) {
 	}
 
 	for _, file := range testFiles {
-		os.MkdirAll(filepath.Dir(file), 0755)
+		if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
+			t.Fatalf("Failed to create directory for %s: %v", file, err)
+		}
 		f, err := os.Create(file)
 		if err != nil {
 			t.Fatalf("Failed to create test file %s: %v", file, err)
 		}
-		f.Close()
+		if err := f.Close(); err != nil {
+			t.Fatalf("Failed to close test file %s: %v", file, err)
+		}
 	}
 
 	client := &http.Client{Timeout: 5 * time.Second}
@@ -169,7 +185,7 @@ func TestCheckInternalLink_LocalFiles(t *testing.T) {
 
 	for _, tc := range testCases {
 		link := &scanner.Link{URL: tc.url, Type: scanner.LinkTypeInternal}
-		err := checkInternalLink(link, tmpDir, "", client, false)
+		err := checkInternalLink(link, tmpDir, false, "", client, false)
 		if err != nil {
 			t.Errorf("Unexpected error checking %s: %v", tc.url, err)
 			continue
@@ -209,7 +225,7 @@ func TestCheckInternalLink_WithBaseURL(t *testing.T) {
 
 	for _, tc := range testCases {
 		link := &scanner.Link{URL: tc.url, Type: scanner.LinkTypeInternal}
-		err := checkInternalLink(link, "", server.URL, client, false)
+		err := checkInternalLink(link, "", false, server.URL, client, false)
 		if err != nil {
 			t.Errorf("Unexpected error checking %s: %v", tc.url, err)
 			continue
@@ -227,13 +243,21 @@ func TestCheckHugoFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create Hugo directory structure
 	contentDir := filepath.Join(tmpDir, "content")
 	staticDir := filepath.Join(tmpDir, "static")
-	os.MkdirAll(contentDir, 0755)
-	os.MkdirAll(staticDir, 0755)
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("Failed to create content directory: %v", err)
+	}
+	if err := os.MkdirAll(staticDir, 0755); err != nil {
+		t.Fatalf("Failed to create static directory: %v", err)
+	}
 
 	// Create test files
 	testFiles := []string{
@@ -244,12 +268,16 @@ func TestCheckHugoFile(t *testing.T) {
 	}
 
 	for _, file := range testFiles {
-		os.MkdirAll(filepath.Dir(file), 0755)
+		if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
+			t.Fatalf("Failed to create directory for %s: %v", file, err)
+		}
 		f, err := os.Create(file)
 		if err != nil {
 			t.Fatalf("Failed to create test file %s: %v", file, err)
 		}
-		f.Close()
+		if err := f.Close(); err != nil {
+			t.Fatalf("Failed to close test file %s: %v", file, err)
+		}
 	}
 
 	testCases := []struct {
@@ -266,7 +294,7 @@ func TestCheckHugoFile(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		result := checkHugoFile(tc.linkPath, tmpDir)
+		result, _ := checkHugoFile(tc.linkPath, tmpDir, false)
 		if result != tc.expected {
 			t.Errorf("%s: expected %v, got %v", tc.description, tc.expected, result)
 		}
@@ -279,10 +307,14 @@ func TestCheckHugoFileVerbose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Test verbose mode returns checked paths
-	found, checkedPaths := checkHugoFileVerbose("nonexistent/", tmpDir, true)
+	found, checkedPaths := checkHugoFile("nonexistent/", tmpDir, true)
 	
 	if found {
 		t.Error("Expected file not to be found")
@@ -293,7 +325,7 @@ func TestCheckHugoFileVerbose(t *testing.T) {
 	}
 
 	// Test non-verbose mode doesn't return paths
-	found, checkedPaths = checkHugoFileVerbose("nonexistent/", tmpDir, false)
+	found, checkedPaths = checkHugoFile("nonexistent/", tmpDir, false)
 	
 	if found {
 		t.Error("Expected file not to be found")
@@ -338,11 +370,17 @@ func TestCheckLinks_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("Warning: failed to remove temp dir: %v", err)
+		}
+	}()
 
 	// Create Hugo directory structure
 	contentDir := filepath.Join(tmpDir, "content")
-	os.MkdirAll(contentDir, 0755)
+	if err := os.MkdirAll(contentDir, 0755); err != nil {
+		t.Fatalf("Failed to create content directory: %v", err)
+	}
 
 	// Create a test file
 	testFile := filepath.Join(contentDir, "about.md")
@@ -350,7 +388,9 @@ func TestCheckLinks_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		t.Fatalf("Failed to close test file: %v", err)
+	}
 
 	// Create test files with various link types
 	files := []*scanner.File{
@@ -365,7 +405,7 @@ func TestCheckLinks_Integration(t *testing.T) {
 		},
 	}
 
-	err = CheckLinks(files, tmpDir, false, "", false)
+	err = CheckLinks(files, tmpDir, false, false, "", false)
 	if err != nil {
 		t.Fatalf("CheckLinks failed: %v", err)
 	}

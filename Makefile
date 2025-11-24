@@ -1,4 +1,4 @@
-.PHONY: build build-all clean deb-local
+.PHONY: build build-all clean test deb-local
 BINARY := hugo-link-checker
 DIST := dist
 VERSION := $(shell grep 'var Version' internal/version/version.go | cut -d'"' -f2)
@@ -19,6 +19,9 @@ build-all:
 clean:
 	rm -f $(BINARY)
 	rm -rf $(DIST)
+
+test:
+	go test ./...
 
 deb-local:
 	@echo "Building Debian package locally using debian/ control files..."
