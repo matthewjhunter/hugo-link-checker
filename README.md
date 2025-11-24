@@ -20,6 +20,29 @@ A fast, comprehensive command-line tool to check links in Hugo-based websites an
 
 ## Installation
 
+### Download pre-built binaries
+
+Download the latest release for your platform from the [GitHub Releases page](https://github.com/your-org/hugo-link-checker/releases).
+
+### Debian/Ubuntu packages
+
+For Debian and Ubuntu systems, download the appropriate `.deb` package:
+
+```bash
+# For amd64 systems
+wget https://github.com/your-org/hugo-link-checker/releases/latest/download/hugo-link-checker_VERSION_amd64.deb
+sudo dpkg -i hugo-link-checker_VERSION_amd64.deb
+
+# For arm64 systems  
+wget https://github.com/your-org/hugo-link-checker/releases/latest/download/hugo-link-checker_VERSION_arm64.deb
+sudo dpkg -i hugo-link-checker_VERSION_arm64.deb
+```
+
+After installation, the tool will be available system-wide:
+```bash
+hugo-link-checker -version
+```
+
 ### Quick start (local build)
 
 ```bash
