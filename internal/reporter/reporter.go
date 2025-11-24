@@ -299,11 +299,15 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 			}
 		}
 		
-		fmt.Fprintf(writer, "    </div>\n")
+		if _, err := fmt.Fprintf(writer, "    </div>\n"); err != nil {
+			return fmt.Errorf("failed to write HTML: %v", err)
+		}
 	}
 	
-	fmt.Fprintf(writer, `</body>
-</html>`)
+	if _, err := fmt.Fprintf(writer, `</body>
+</html>`); err != nil {
+		return fmt.Errorf("failed to write HTML footer: %v", err)
+	}
 	
 	return nil
 }
