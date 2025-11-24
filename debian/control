@@ -1,7 +1,7 @@
 Source: hugo-link-checker
 Section: utils
 Priority: optional
-Maintainer: Hugo Link Checker Team <maintainer@example.com>
+Maintainer: Hugo Link Checker Team <matthew@infodancer.org>
 Build-Depends: debhelper-compat (= 13), dh-golang, golang-go
 Standards-Version: 4.6.0
 Homepage: https://github.com/your-org/hugo-link-checker

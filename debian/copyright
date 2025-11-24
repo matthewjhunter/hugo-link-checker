@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: hugo-link-checker
-Upstream-Contact: Hugo Link Checker Team <maintainer@example.com>
+Upstream-Contact: Hugo Link Checker Team <matthew@infodancer.org>
 Source: https://github.com/your-org/hugo-link-checker
 
 Files: *

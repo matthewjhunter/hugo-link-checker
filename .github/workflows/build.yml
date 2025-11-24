@@ -116,7 +116,7 @@ jobs:
           Section: utils
           Priority: optional
           Architecture: ${{ matrix.arch }}
-          Maintainer: Hugo Link Checker Team <maintainer@example.com>
+          Maintainer: Hugo Link Checker Team <matthew@infodancer.org>
           Description: Link checker for Hugo static sites
            A command-line tool to check for broken links in Hugo static sites.
            Supports checking both internal and external links, with various
