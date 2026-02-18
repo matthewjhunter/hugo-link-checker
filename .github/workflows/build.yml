@@ -61,7 +61,7 @@ jobs:
           ls -la dist/hugo-link-checker-${{ matrix.os-arch.os }}-${{ matrix.os-arch.arch }}*
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: hugo-link-checker-${{ matrix.os-arch.os }}-${{ matrix.os-arch.arch }}
           path: dist/hugo-link-checker-${{ matrix.os-arch.os }}-${{ matrix.os-arch.arch }}*
@@ -138,7 +138,7 @@ jobs:
           mv "${PKG_DIR}.deb" dist/
 
       - name: Upload Debian package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: hugo-link-checker-deb-${{ matrix.arch }}
           path: dist/*.deb
