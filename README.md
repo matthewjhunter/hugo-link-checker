@@ -1,5 +1,10 @@
 # hugo-link-checker
 
+[![CI](https://github.com/matthewjhunter/hugo-link-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/matthewjhunter/hugo-link-checker/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/matthewjhunter/hugo-link-checker)](https://goreportcard.com/report/github.com/matthewjhunter/hugo-link-checker)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/matthewjhunter/hugo-link-checker)](go.mod)
+
 A fast, comprehensive command-line tool to check links in Hugo-based websites and static sites.
 
 ## Features
