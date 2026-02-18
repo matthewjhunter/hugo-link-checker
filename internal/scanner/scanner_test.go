@@ -66,15 +66,15 @@ And an internal [relative link](./relative.md) too.
 
 	// Expected links
 	expectedLinks := map[string]LinkType{
-		"https://www.google.com":     LinkTypeExternal,
-		"./internal-page.html":       LinkTypeInternal,
-		"../docs/readme.md":          LinkTypeInternal,
-		"https://example.com":        LinkTypeExternal,
-		"http://test.org":            LinkTypeExternal,
-		"https://reference1.com":     LinkTypeExternal,
-		"./local-reference.html":     LinkTypeInternal,
-		"https://mixed.example.com":  LinkTypeExternal,
-		"./relative.md":              LinkTypeInternal,
+		"https://www.google.com":    LinkTypeExternal,
+		"./internal-page.html":      LinkTypeInternal,
+		"../docs/readme.md":         LinkTypeInternal,
+		"https://example.com":       LinkTypeExternal,
+		"http://test.org":           LinkTypeExternal,
+		"https://reference1.com":    LinkTypeExternal,
+		"./local-reference.html":    LinkTypeInternal,
+		"https://mixed.example.com": LinkTypeExternal,
+		"./relative.md":             LinkTypeInternal,
 	}
 
 	// Check number of links
@@ -156,13 +156,13 @@ func TestParseLinksFromHTMLFile(t *testing.T) {
 
 	// Expected links
 	expectedLinks := map[string]LinkType{
-		"./styles.css":                LinkTypeInternal,
+		"./styles.css":                    LinkTypeInternal,
 		"https://example.com/favicon.ico": LinkTypeExternal,
-		"https://www.example.com":     LinkTypeExternal,
-		"./internal.html":             LinkTypeInternal,
-		"../docs/index.html":          LinkTypeInternal,
-		"mailto:test@example.com":     LinkTypeExternal, // mailto has a scheme, so it's external
-		"https://github.com/user/repo": LinkTypeExternal,
+		"https://www.example.com":         LinkTypeExternal,
+		"./internal.html":                 LinkTypeInternal,
+		"../docs/index.html":              LinkTypeInternal,
+		"mailto:test@example.com":         LinkTypeExternal, // mailto has a scheme, so it's external
+		"https://github.com/user/repo":    LinkTypeExternal,
 	}
 
 	// Check number of links
@@ -205,8 +205,8 @@ func TestEnumerateFiles(t *testing.T) {
 		"test1.md",
 		"test2.html",
 		"test3.htm",
-		"test4.txt",      // Should be ignored
-		".hidden.md",     // Should be ignored (dot file)
+		"test4.txt",  // Should be ignored
+		".hidden.md", // Should be ignored (dot file)
 		"subdir/test5.md",
 	}
 
@@ -225,7 +225,7 @@ func TestEnumerateFiles(t *testing.T) {
 				t.Fatalf("Failed to create dir %s: %v", dir, err)
 			}
 		}
-		
+
 		file, err := os.Create(fullPath)
 		if err != nil {
 			t.Fatalf("Failed to create file %s: %v", fullPath, err)

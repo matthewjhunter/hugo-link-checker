@@ -11,7 +11,7 @@ import (
 // and returns a map of canonical paths to File structs to ensure uniqueness
 func EnumerateFiles(rootDir string, extensions []string) (map[string]*File, error) {
 	files := make(map[string]*File)
-	
+
 	// Normalize the extensions to include the dot
 	normalizedExts := make([]string, len(extensions))
 	for i, ext := range extensions {
@@ -21,12 +21,12 @@ func EnumerateFiles(rootDir string, extensions []string) (map[string]*File, erro
 			normalizedExts[i] = ext
 		}
 	}
-	
+
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		// Skip directories, but check for "public" directory to skip entirely
 		if info.IsDir() {
 			// Skip the "public" directory and all its contents
@@ -35,7 +35,7 @@ func EnumerateFiles(rootDir string, extensions []string) (map[string]*File, erro
 			}
 			return nil
 		}
-		
+
 		// Check if file has one of the desired extensions
 		hasValidExtension := false
 		for _, ext := range normalizedExts {
@@ -47,44 +47,44 @@ func EnumerateFiles(rootDir string, extensions []string) (map[string]*File, erro
 		if !hasValidExtension {
 			return nil
 		}
-		
+
 		// Skip files beginning with a dot
 		filename := filepath.Base(path)
 		if strings.HasPrefix(filename, ".") {
 			return nil
 		}
-		
+
 		// Get canonical path to ensure uniqueness
 		canonicalPath, err := filepath.Abs(path)
 		if err != nil {
 			return fmt.Errorf("failed to get canonical path for %s: %w", path, err)
 		}
-		
+
 		// Clean the canonical path
 		canonicalPath = filepath.Clean(canonicalPath)
-		
+
 		// Check if we've already seen this canonical path
 		if _, exists := files[canonicalPath]; exists {
 			// Skip duplicate files (e.g., symlinks pointing to same file)
 			return nil
 		}
-		
+
 		// Create new File struct
 		file := &File{
 			Path:          path,
 			CanonicalPath: canonicalPath,
 			Links:         make([]Link, 0),
 		}
-		
+
 		files[canonicalPath] = file
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to enumerate files: %w", err)
 	}
-	
+
 	return files, nil
 }
 

@@ -27,18 +27,18 @@ type ReportOptions struct {
 }
 
 type JSONReport struct {
-	GeneratedAt time.Time         `json:"generated_at"`
-	Summary     ReportSummary     `json:"summary"`
-	Links       []UniqueLink      `json:"links"`
+	GeneratedAt time.Time     `json:"generated_at"`
+	Summary     ReportSummary `json:"summary"`
+	Links       []UniqueLink  `json:"links"`
 }
 
 type ReportSummary struct {
-	TotalFiles       int `json:"total_files"`
-	TotalLinks       int `json:"total_links"`
-	UniqueLinks      int `json:"unique_links"`
-	BrokenLinks      int `json:"broken_links"`
-	InternalLinks    int `json:"internal_links"`
-	ExternalLinks    int `json:"external_links"`
+	TotalFiles    int `json:"total_files"`
+	TotalLinks    int `json:"total_links"`
+	UniqueLinks   int `json:"unique_links"`
+	BrokenLinks   int `json:"broken_links"`
+	InternalLinks int `json:"internal_links"`
+	ExternalLinks int `json:"external_links"`
 }
 
 type UniqueLink struct {
@@ -53,7 +53,7 @@ type UniqueLink struct {
 // GenerateReport creates a report in the specified format
 func GenerateReport(files []*scanner.File, options ReportOptions) error {
 	var writer io.Writer = os.Stdout
-	
+
 	if options.OutputFile != "" {
 		file, err := os.Create(options.OutputFile)
 		if err != nil {
@@ -66,7 +66,7 @@ func GenerateReport(files []*scanner.File, options ReportOptions) error {
 		}()
 		writer = file
 	}
-	
+
 	switch options.Format {
 	case FormatJSON:
 		return generateJSONReport(files, writer)
@@ -79,7 +79,7 @@ func GenerateReport(files []*scanner.File, options ReportOptions) error {
 
 func generateTextReport(files []*scanner.File, writer io.Writer) error {
 	summary := calculateSummary(files)
-	
+
 	// Sort files by absolute path
 	sortedFiles := make([]*scanner.File, len(files))
 	copy(sortedFiles, files)
@@ -88,10 +88,10 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 		absPathJ, _ := filepath.Abs(sortedFiles[j].Path)
 		return absPathI < absPathJ
 	})
-	
+
 	// Check if we're writing to stdout
 	isStdout := writer == os.Stdout
-	
+
 	if _, err := fmt.Fprintf(writer, "Hugo Link Checker Report\n"); err != nil {
 		return fmt.Errorf("failed to write report header: %v", err)
 	}
@@ -101,7 +101,7 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 	if _, err := fmt.Fprintf(writer, "Generated: %s\n\n", time.Now().Format(time.RFC3339)); err != nil {
 		return fmt.Errorf("failed to write report header: %v", err)
 	}
-	
+
 	// Show summary at the beginning only if not writing to stdout
 	if !isStdout {
 		if _, err := fmt.Fprintf(writer, "Summary:\n"); err != nil {
@@ -126,13 +126,13 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 			return fmt.Errorf("failed to write summary: %v", err)
 		}
 	}
-	
+
 	// Filter files to only show markdown/HTML files with broken links
 	for _, file := range sortedFiles {
 		if !isMarkdownOrHTML(file.Path) {
 			continue
 		}
-		
+
 		// Check if this file has any broken links
 		var brokenLinks []scanner.Link
 		for _, link := range file.Links {
@@ -140,12 +140,12 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 				brokenLinks = append(brokenLinks, link)
 			}
 		}
-		
+
 		// Only show files that have broken links
 		if len(brokenLinks) == 0 {
 			continue
 		}
-		
+
 		if _, err := fmt.Fprintf(writer, "File: %s\n", file.Path); err != nil {
 			return fmt.Errorf("failed to write file info: %v", err)
 		}
@@ -155,19 +155,19 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 		if _, err := fmt.Fprintf(writer, "  Links (broken/total): %d/%d\n", len(brokenLinks), len(file.Links)); err != nil {
 			return fmt.Errorf("failed to write file info: %v", err)
 		}
-		
+
 		// Only show broken links
 		for _, link := range brokenLinks {
 			status := "BROKEN"
 			if link.ErrorMessage != "" {
 				status = fmt.Sprintf("BROKEN (%s)", link.ErrorMessage)
 			}
-			
+
 			linkType := "internal"
 			if link.Type == scanner.LinkTypeExternal {
 				linkType = "external"
 			}
-			
+
 			if _, err := fmt.Fprintf(writer, "    %s [%s] - %s\n", link.URL, linkType, status); err != nil {
 				return fmt.Errorf("failed to write link info: %v", err)
 			}
@@ -176,7 +176,7 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 			return fmt.Errorf("failed to write newline: %v", err)
 		}
 	}
-	
+
 	// Show summary at the end if writing to stdout
 	if isStdout {
 		if _, err := fmt.Fprintf(writer, "Summary:\n"); err != nil {
@@ -201,20 +201,20 @@ func generateTextReport(files []*scanner.File, writer io.Writer) error {
 			return fmt.Errorf("failed to write summary: %v", err)
 		}
 	}
-	
+
 	return nil
 }
 
 func generateJSONReport(files []*scanner.File, writer io.Writer) error {
 	summary := calculateSummary(files)
 	uniqueLinks := getUniqueLinks(files)
-	
+
 	report := JSONReport{
 		GeneratedAt: time.Now(),
 		Summary:     summary,
 		Links:       uniqueLinks,
 	}
-	
+
 	encoder := json.NewEncoder(writer)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(report)
@@ -222,7 +222,7 @@ func generateJSONReport(files []*scanner.File, writer io.Writer) error {
 
 func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 	summary := calculateSummary(files)
-	
+
 	// Sort files by absolute path
 	sortedFiles := make([]*scanner.File, len(files))
 	copy(sortedFiles, files)
@@ -231,7 +231,7 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 		absPathJ, _ := filepath.Abs(sortedFiles[j].Path)
 		return absPathI < absPathJ
 	})
-	
+
 	if _, err := fmt.Fprintf(writer, `<!DOCTYPE html>
 <html>
 <head>
@@ -263,11 +263,11 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
             <li>External links: %d</li>
         </ul>
     </div>
-`, time.Now().Format(time.RFC3339), summary.TotalFiles, summary.TotalLinks, 
-   summary.UniqueLinks, summary.BrokenLinks, summary.InternalLinks, summary.ExternalLinks); err != nil {
+`, time.Now().Format(time.RFC3339), summary.TotalFiles, summary.TotalLinks,
+		summary.UniqueLinks, summary.BrokenLinks, summary.InternalLinks, summary.ExternalLinks); err != nil {
 		return fmt.Errorf("failed to write HTML header: %v", err)
 	}
-	
+
 	for _, file := range sortedFiles {
 		if _, err := fmt.Fprintf(writer, `    <div class="file">
         <h3>%s</h3>
@@ -276,7 +276,7 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 `, file.Path, file.CanonicalPath, len(file.Links)); err != nil {
 			return fmt.Errorf("failed to write file info: %v", err)
 		}
-		
+
 		for _, link := range file.Links {
 			status := "ok"
 			statusText := "OK"
@@ -287,28 +287,28 @@ func generateHTMLReport(files []*scanner.File, writer io.Writer) error {
 					statusText = fmt.Sprintf("BROKEN (%s)", link.ErrorMessage)
 				}
 			}
-			
+
 			linkClass := "internal"
 			if link.Type == scanner.LinkTypeExternal {
 				linkClass = "external"
 			}
-			
+
 			if _, err := fmt.Fprintf(writer, `        <div class="link %s %s">%s [%s] - %s</div>
 `, status, linkClass, link.URL, linkClass, statusText); err != nil {
 				return fmt.Errorf("failed to write link info: %v", err)
 			}
 		}
-		
+
 		if _, err := fmt.Fprintf(writer, "    </div>\n"); err != nil {
 			return fmt.Errorf("failed to write HTML: %v", err)
 		}
 	}
-	
+
 	if _, err := fmt.Fprintf(writer, `</body>
 </html>`); err != nil {
 		return fmt.Errorf("failed to write HTML footer: %v", err)
 	}
-	
+
 	return nil
 }
 
@@ -316,27 +316,27 @@ func calculateSummary(files []*scanner.File) ReportSummary {
 	summary := ReportSummary{
 		TotalFiles: len(files),
 	}
-	
+
 	uniqueURLs := make(map[string]bool)
-	
+
 	for _, file := range files {
 		summary.TotalLinks += len(file.Links)
-		
+
 		for _, link := range file.Links {
 			uniqueURLs[link.URL] = true
-			
+
 			if link.Type == scanner.LinkTypeExternal {
 				summary.ExternalLinks++
 			} else {
 				summary.InternalLinks++
 			}
-			
+
 			if link.StatusCode >= 400 || (link.StatusCode == 0 && link.ErrorMessage != "") {
 				summary.BrokenLinks++
 			}
 		}
 	}
-	
+
 	summary.UniqueLinks = len(uniqueURLs)
 	return summary
 }
@@ -349,7 +349,7 @@ func isMarkdownOrHTML(filePath string) bool {
 
 func getUniqueLinks(files []*scanner.File) []UniqueLink {
 	linkMap := make(map[string]*UniqueLink)
-	
+
 	for _, file := range files {
 		for _, link := range file.Links {
 			if existing, exists := linkMap[link.URL]; exists {
@@ -359,7 +359,7 @@ func getUniqueLinks(files []*scanner.File) []UniqueLink {
 				if link.Type == scanner.LinkTypeExternal {
 					linkType = "external"
 				}
-				
+
 				linkMap[link.URL] = &UniqueLink{
 					URL:          link.URL,
 					Type:         linkType,
@@ -371,11 +371,11 @@ func getUniqueLinks(files []*scanner.File) []UniqueLink {
 			}
 		}
 	}
-	
+
 	result := make([]UniqueLink, 0, len(linkMap))
 	for _, link := range linkMap {
 		result = append(result, *link)
 	}
-	
+
 	return result
 }

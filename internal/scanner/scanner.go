@@ -40,19 +40,19 @@ func isInternalLink(linkURL string) bool {
 	// Clean the URL by removing angle brackets and other wrapper characters
 	cleanURL := strings.Trim(linkURL, "<>")
 	cleanURL = strings.TrimSpace(cleanURL)
-	
+
 	// Parse the cleaned URL
 	u, err := url.Parse(cleanURL)
 	if err != nil {
 		// If we can't parse it, treat as internal for safety
 		return true
 	}
-	
+
 	// If it has a scheme (http, https, mailto, etc.) or host, it's external
 	if u.Scheme != "" || u.Host != "" {
 		return false
 	}
-	
+
 	// Otherwise it's a relative/internal link
 	return true
 }
@@ -63,7 +63,7 @@ func NewLink(linkURL string) Link {
 	if !isInternalLink(linkURL) {
 		linkType = LinkTypeExternal
 	}
-	
+
 	return Link{
 		URL:  linkURL,
 		Type: linkType,
@@ -76,22 +76,22 @@ func ParseLinksFromFile(file *File, checkImages bool) error {
 	// Markdown: [text](url), <url>, [ref]: url
 	// HTML: <a href="url">, <link href="url">
 	linkRegexes := []*regexp.Regexp{
-		regexp.MustCompile(`\[([^\]]*)\]\(([^)]+)\)`),           // [text](url) - markdown
-		regexp.MustCompile(`<(https?://[^>]+)>`),                // <http://example.com> - markdown autolinks
-		regexp.MustCompile(`^\s*\[([^\]]+)\]:\s*(.+)$`),         // [ref]: url - markdown reference definitions
-		regexp.MustCompile(`<a\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*>`), // <a href="url"> - HTML
+		regexp.MustCompile(`\[([^\]]*)\]\(([^)]+)\)`),                        // [text](url) - markdown
+		regexp.MustCompile(`<(https?://[^>]+)>`),                             // <http://example.com> - markdown autolinks
+		regexp.MustCompile(`^\s*\[([^\]]+)\]:\s*(.+)$`),                      // [ref]: url - markdown reference definitions
+		regexp.MustCompile(`<a\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*>`),    // <a href="url"> - HTML
 		regexp.MustCompile(`<link\s+[^>]*href\s*=\s*["']([^"']+)["'][^>]*>`), // <link href="url"> - HTML
 	}
-	
+
 	// Add image link patterns if image checking is enabled
 	if checkImages {
 		imageRegexes := []*regexp.Regexp{
-			regexp.MustCompile(`!\[([^\]]*)\]\(([^)]+)\)`),          // ![alt](url) - markdown images
+			regexp.MustCompile(`!\[([^\]]*)\]\(([^)]+)\)`),                     // ![alt](url) - markdown images
 			regexp.MustCompile(`<img\s+[^>]*src\s*=\s*["']([^"']+)["'][^>]*>`), // <img src="url"> - HTML images
 		}
 		linkRegexes = append(linkRegexes, imageRegexes...)
 	}
-	
+
 	// Open the file
 	f, err := os.Open(file.Path)
 	if err != nil {
@@ -102,15 +102,15 @@ func ParseLinksFromFile(file *File, checkImages bool) error {
 			fmt.Fprintf(os.Stderr, "Warning: failed to close file %s: %v\n", file.Path, closeErr)
 		}
 	}()
-	
+
 	// Track unique links to avoid duplicates
 	linkMap := make(map[string]bool)
-	
+
 	// Read file line by line
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		
+
 		// Apply each regex to find links
 		for _, regex := range linkRegexes {
 			matches := regex.FindAllStringSubmatch(line, -1)
@@ -123,11 +123,11 @@ func ParseLinksFromFile(file *File, checkImages bool) error {
 					// For <url> format, URL is in match[1]
 					linkURL = strings.TrimSpace(match[1])
 				}
-				
+
 				if linkURL == "" {
 					continue
 				}
-				
+
 				// Remove any title part from the URL (everything after first space or quote)
 				if spaceIdx := strings.Index(linkURL, " "); spaceIdx != -1 {
 					linkURL = linkURL[:spaceIdx]
@@ -135,32 +135,32 @@ func ParseLinksFromFile(file *File, checkImages bool) error {
 				if quoteIdx := strings.Index(linkURL, `"`); quoteIdx != -1 {
 					linkURL = linkURL[:quoteIdx]
 				}
-				
+
 				// Clean the URL by removing angle brackets and trimming whitespace
 				linkURL = strings.Trim(linkURL, "<>")
 				linkURL = strings.TrimSpace(linkURL)
-				
+
 				// Skip empty URLs or fragment-only links
 				if linkURL == "" || linkURL == "#" {
 					continue
 				}
-				
+
 				// Check if we've already seen this link
 				if linkMap[linkURL] {
 					continue
 				}
 				linkMap[linkURL] = true
-				
+
 				// Create and add the link
 				link := NewLink(linkURL)
 				file.Links = append(file.Links, link)
 			}
 		}
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("error reading file %s: %w", file.Path, err)
 	}
-	
+
 	return nil
 }

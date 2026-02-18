@@ -89,7 +89,7 @@ func TestCheckExternalLink(t *testing.T) {
 	for _, tc := range testCases {
 		link := &scanner.Link{URL: tc.url}
 		err := checkExternalLink(client, link)
-		
+
 		if tc.expectError && err == nil {
 			t.Errorf("Expected error for URL %s, but got none", tc.url)
 		}
@@ -116,7 +116,7 @@ func TestCheckMailtoLink(t *testing.T) {
 	for _, tc := range testCases {
 		link := &scanner.Link{URL: tc.url}
 		err := checkMailtoLink(link)
-		
+
 		if tc.expectError && err == nil {
 			t.Errorf("Expected error for URL %s, but got none", tc.url)
 		}
@@ -190,7 +190,7 @@ func TestCheckInternalLink_LocalFiles(t *testing.T) {
 			t.Errorf("Unexpected error checking %s: %v", tc.url, err)
 			continue
 		}
-		
+
 		if link.StatusCode != tc.expectedStatus {
 			t.Errorf("%s: expected status %d, got %d", tc.description, tc.expectedStatus, link.StatusCode)
 		}
@@ -230,7 +230,7 @@ func TestCheckInternalLink_WithBaseURL(t *testing.T) {
 			t.Errorf("Unexpected error checking %s: %v", tc.url, err)
 			continue
 		}
-		
+
 		if link.StatusCode != tc.expectedStatus {
 			t.Errorf("%s: expected status %d, got %d", tc.description, tc.expectedStatus, link.StatusCode)
 		}
@@ -281,8 +281,8 @@ func TestCheckHugoFile(t *testing.T) {
 	}
 
 	testCases := []struct {
-		linkPath string
-		expected bool
+		linkPath    string
+		expected    bool
 		description string
 	}{
 		{"about/", true, "Hugo URL to content file"},
@@ -315,22 +315,22 @@ func TestCheckHugoFileVerbose(t *testing.T) {
 
 	// Test verbose mode returns checked paths
 	found, checkedPaths := checkHugoFile("nonexistent/", tmpDir, true)
-	
+
 	if found {
 		t.Error("Expected file not to be found")
 	}
-	
+
 	if len(checkedPaths) == 0 {
 		t.Error("Expected some checked paths to be returned in verbose mode")
 	}
 
 	// Test non-verbose mode doesn't return paths
 	found, checkedPaths = checkHugoFile("nonexistent/", tmpDir, false)
-	
+
 	if found {
 		t.Error("Expected file not to be found")
 	}
-	
+
 	if len(checkedPaths) != 0 {
 		t.Error("Expected no checked paths to be returned in non-verbose mode")
 	}
@@ -358,7 +358,7 @@ func TestCountBrokenLinks(t *testing.T) {
 
 	count := CountBrokenLinks(files)
 	expected := 4 // 404, 500, timeout error, and 403
-	
+
 	if count != expected {
 		t.Errorf("Expected %d broken links, got %d", expected, count)
 	}
@@ -398,9 +398,9 @@ func TestCheckLinks_Integration(t *testing.T) {
 			Path: "test.md",
 			Links: []scanner.Link{
 				{URL: "{{.Site.BaseURL}}/template", Type: scanner.LinkTypeInternal}, // Hugo template
-				{URL: "/about/", Type: scanner.LinkTypeInternal},                   // Valid internal
-				{URL: "/nonexistent/", Type: scanner.LinkTypeInternal},             // Invalid internal
-				{URL: "#fragment", Type: scanner.LinkTypeInternal},                 // Fragment only
+				{URL: "/about/", Type: scanner.LinkTypeInternal},                    // Valid internal
+				{URL: "/nonexistent/", Type: scanner.LinkTypeInternal},              // Invalid internal
+				{URL: "#fragment", Type: scanner.LinkTypeInternal},                  // Fragment only
 			},
 		},
 	}
