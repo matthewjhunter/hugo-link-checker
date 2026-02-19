@@ -1,8 +1,0 @@
-hugo-link-checker (0.1.0-1) unstable; urgency=medium
-
-  * Initial release.
-  * Link checking for Hugo static sites
-  * Support for multiple output formats
-  * Configurable ignore patterns
-
- -- Matthew Hunter <matthew@infodancer.org>  Sun, 24 Nov 2024 00:00:00 +0000
