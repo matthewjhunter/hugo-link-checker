@@ -1,54 +1,27 @@
-name: Create Release
+name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag (e.g., v1.0.0)'
-        required: true
-        type: string
-      name:
-        description: 'Release name (optional, defaults to tag)'
-        required: false
-        type: string
-      prerelease:
-        description: 'Mark as pre-release'
-        required: false
-        type: boolean
-        default: false
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-
   release:
-    needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          path: artifacts
+          fetch-depth: 0
 
-      - name: Prepare release assets
-        run: |
-          mkdir -p release-assets
-          find artifacts -type f -name "hugo-link-checker-*" -exec cp {} release-assets/ \;
-          ls -la release-assets/
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - uses: actions/setup-go@v5
         with:
-          tag_name: ${{ inputs.tag }}
-          name: ${{ inputs.name || inputs.tag }}
-          prerelease: ${{ inputs.prerelease }}
-          files: release-assets/*
-          generate_release_notes: true
+          go-version-file: go.mod
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
