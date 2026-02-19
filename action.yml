@@ -54,36 +54,31 @@ runs:
     - name: Download hugo-link-checker
       shell: bash
       run: |
+        REPO="matthewjhunter/hugo-link-checker"
+
         # Determine OS and architecture
         OS=$(uname -s | tr '[:upper:]' '[:lower:]')
         ARCH=$(uname -m)
-        
+
         case $ARCH in
           x86_64) ARCH="amd64" ;;
           aarch64|arm64) ARCH="arm64" ;;
-          armv7l) ARCH="arm" ;;
         esac
-        
-        # Get latest release
-        LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ github.action_repository }}/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-        
-        # Download binary
-        BINARY_NAME="hugo-link-checker-${OS}-${ARCH}"
-        if [ "$OS" = "windows" ]; then
-          BINARY_NAME="${BINARY_NAME}.exe"
-        fi
-        
-        DOWNLOAD_URL="https://github.com/${{ github.action_repository }}/releases/download/${LATEST_RELEASE}/${BINARY_NAME}"
-        
-        echo "Downloading hugo-link-checker from: ${DOWNLOAD_URL}"
-        curl -L -o hugo-link-checker "${DOWNLOAD_URL}"
-        chmod +x hugo-link-checker
-        
-        # Debug: List downloaded files
-        echo "Downloaded files:"
-        ls -la
 
-        # Verify download
+        # Get latest release tag and strip v prefix for archive name
+        TAG=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" \
+          | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        VERSION="${TAG#v}"
+
+        # GoReleaser archive: hugo-link-checker_VERSION_OS_ARCH.tar.gz
+        ARCHIVE="hugo-link-checker_${VERSION}_${OS}_${ARCH}.tar.gz"
+        DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/${ARCHIVE}"
+
+        echo "Downloading ${DOWNLOAD_URL}"
+        curl -fsSL -o "${ARCHIVE}" "${DOWNLOAD_URL}"
+        tar xzf "${ARCHIVE}" hugo-link-checker
+        chmod +x hugo-link-checker
+
         ./hugo-link-checker -version
 
     - name: Run hugo-link-checker
