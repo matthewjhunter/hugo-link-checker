@@ -2,4 +2,4 @@ module github.com/infodancer/hugo-link-checker
 
 go 1.25.0
 
-toolchain go1.25.9
+toolchain go1.25.11
